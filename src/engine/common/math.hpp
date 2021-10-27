@@ -37,7 +37,13 @@ struct MathVec2
     }
 
     template<template<typename> class Vec2Type, typename T>
-    static T angle(Vec2Type<T> v_1, Vec2Type<T> v_2 = {1.0f, 0.0f})
+    static T angle(Vec2Type<T> v_1)
+    {
+        return -atan2(-v_1.y, v_1.x);
+    }
+
+    template<template<typename> class Vec2Type, typename T>
+    static T angle(Vec2Type<T> v_1, Vec2Type<T> v_2)
     {
         const T dot = v_1.x * v_2.x + v_1.y * v_2.y;
         const T det = v_1.x * v_2.y - v_1.y * v_2.x;

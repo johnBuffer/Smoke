@@ -90,7 +90,7 @@ public:
     {
         m_window.setFramerateLimit(60);
         m_window.setKeyRepeatEnabled(false);
-        m_window.setMouseCursorVisible(false);
+        m_window.setMouseCursorVisible(true);
         registerDefaultCallbacks(use_viewport_callbacks);
     }
 
@@ -130,6 +130,12 @@ public:
     sf::Vector2f getWorldMousePosition() const
     {
         return m_render_context.m_viewport_handler.getMouseWorldPosition();
+    }
+
+    sf::Vector2f getMousePosition() const
+    {
+        const sf::Vector2i mouse_pos = sf::Mouse::getPosition(m_window);
+        return { to<float>(mouse_pos.x), to<float>(mouse_pos.y) };
     }
     
 private:

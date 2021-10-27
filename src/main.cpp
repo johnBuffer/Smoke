@@ -12,18 +12,45 @@ int32_t main()
     Smoke::init();
     SmokeSystem smoke_system;
 
+    // Explosion
+    Smoke::Configuration explosion_config;
+    explosion_config.setDuration(1.0f, 0.2f);
+    explosion_config.min_dist_ratio = 0.4f;
+    explosion_config.target_scale   = 1.0f;
+    explosion_config.opacity_level  = 0.25f;
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
         const uint32_t smokes_count = 40;
         for (uint32_t i(smokes_count); i--;) {
-            const float angle = RNGf::getUnder(2.0f * Math::PI);
-            const float dist = RNGf::getUnder(300.0f);
-            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(angle), sin(angle)}, 300.0f, 1.0f);
+            const float direction_angle = RNGf::getUnder(2.0f * Math::PI);
+            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(direction_angle), sin(direction_angle)}, 300.0f, explosion_config);
         }
+    });
+    // Smoke on click
+    Smoke::Configuration stream_config;
+    stream_config.setDuration(4.0f, 0.0f);
+    stream_config.min_dist_ratio = 0.5f;
+    stream_config.target_scale = 1.0f;
+    stream_config.opacity_level = 0.2f;
+    stream_config.dissipation_vector = { 0.0f, -100.0f };
+    bool smoke_activated = false;
+    app.getEventManager().addMousePressedCallback(sf::Mouse::Left, [&](sfev::CstEv) {
+        smoke_activated = true;
+    });
+    app.getEventManager().addMouseReleasedCallback(sf::Mouse::Left, [&](sfev::CstEv) {
+        smoke_activated = false;
     });
 
     const float dt = 1.0f / 60.0f;
 
 	while (app.run()) {
+        // Create smoke if activated
+        if (smoke_activated) {
+            const sf::Vector2f mouse_posiiton = app.getWorldMousePosition();
+            const Vec2 mid_screen{ window_width * 0.5f, window_height * 0.5f };
+            const Vec2 mid_to_mouse = Vec2{ mouse_posiiton.x, mouse_posiiton.y } - mid_screen;
+            const float direction_angle = MathVec2::angle(mid_to_mouse) + RNGf::getRange(Math::PI * 0.1f);
+            smoke_system.create({ window_width * 0.5f, window_height * 0.5f }, {cos(direction_angle), sin(direction_angle)}, 800.0f, stream_config);
+        }
         // Update smoke
         smoke_system.update(dt);
         // Render the scene

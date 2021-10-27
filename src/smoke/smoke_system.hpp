@@ -8,9 +8,9 @@ struct SmokeSystem
 {
     std::vector<Smoke> particles;
 
-    void create(Vec2 pos, Vec2 vel, float dist, float lifetime)
+    void create(Vec2 pos, Vec2 vel, float dist, const Smoke::Configuration& configuration)
     {
-        particles.emplace_back(pos, vel, dist, lifetime);
+        particles.emplace_back(pos, vel, dist, configuration);
     }
 
     void update(float dt)
