@@ -140,6 +140,12 @@ struct Vec2Base
 	T x, y;
 };
 
+template<typename T>
+Vec2Base<T> operator+(Vec2Base<T> v1, Vec2Base<T> v2)
+{
+	return { v1.x + v2.x, v1.y + v2.y };
+}
+
 
 using Vec2 = Vec2Base<float>;
 using IVec2 = Vec2Base<int32_t>;

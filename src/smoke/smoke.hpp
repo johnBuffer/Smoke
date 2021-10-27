@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/common/vec.hpp"
 #include "engine/common/utils.hpp"
+#include "engine/common/smooth.hpp"
 #include "engine/common/math.hpp"
 #include "engine/common/number_generator.hpp"
 #include "engine/window_context_handler.hpp"
@@ -16,23 +17,29 @@ struct Smoke
         texture.loadFromFile("res/smoke.png");
     }
 
-    Vec2       position;
-    Vec2       velocity;
-    float      angle          = 0.0f;
-    float      angle_velocity = 0.0f;
-    float      scale          = 0.1f;
-    float      ratio          = 0.0f;
-    float      duration       = 0.0f;
-    float      current_time   = 0.0f;
+    Vec2  position;
+    Vec2  direction;
+    float target_dist  = 0.0f;
+    float angle        = 0.0f;
+    float target_angle = 0.0f;
+    float duration     = 0.0f;
+    float current_time = 0.0f;
+    float ratio        = 0.0f;
+    float scale        = 0.2f;
+    float target_scale = 0.5f;
     sf::Sprite sprite;
 
     Smoke() = default;
 
-    Smoke(Vec2 pos, Vec2 vel, float lifetime)
+    Smoke(Vec2 pos, Vec2 dir, float dist, float lifetime)
         : position(pos)
-        , velocity(vel)
+        , direction(dir)
+        , target_dist(dist)
         , angle(RNGf::getUnder(2.0f * Math::PI))
-        , duration(lifetime)
+        , target_angle(RNGf::getFullRange(1.5f))
+        , target_scale(RNGf::getUnder(1.0f))
+        , duration(1.25f * lifetime)
+        , current_time(0.25f * lifetime)
         , sprite(texture)
     {
         const sf::Vector2u texture_size = texture.getSize();
@@ -41,14 +48,9 @@ struct Smoke
 
     void update(float dt)
     {
-        // Update physic properties
-        position     += velocity * dt;
-        current_time += dt;
-        ratio         = current_time / duration;
-        scale        *= 1.0f + 1.4f * dt;
-        const float slow_down_factor = 10.0f;
-        velocity.x   *= 1.0f - slow_down_factor * dt;
-        velocity.y   *= 1.0f - slow_down_factor * dt;
+        // Update time
+        current_time   += dt;
+        ratio           = current_time / duration;
     }
 
     bool done() const
@@ -58,9 +60,15 @@ struct Smoke
 
     void render(RenderContext& context)
     {
-        sprite.setPosition({position.x, position.y});
-        sprite.setScale(scale, scale);
-        sprite.setRotation(Math::radToDeg(angle));
+        const float t_scale = Smooth::smoothStop(ratio, 10);
+        const float t_dist = Smooth::smoothStop(ratio, 5);
+        const float t_angle = Smooth::smoothStop(ratio, 1);
+        const float current_scale = scale + target_scale * t_scale;
+        const float current_angle = angle + (target_angle * t_angle);
+        const Vec2  current_pos   = position + direction * (target_dist * t_dist);
+        sprite.setPosition({ current_pos.x, current_pos.y});
+        sprite.setScale(current_scale, current_scale);
+        sprite.setRotation(Math::radToDeg(current_angle));
         sprite.setColor(sf::Color(200, 200, 200, to<uint8_t>(220 * (1.0f - ratio))));
         context.draw(sprite);
     }
