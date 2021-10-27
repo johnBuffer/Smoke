@@ -11,27 +11,28 @@ int32_t main()
     // Load resources
     Smoke::init();
     SmokeSystem smoke_system;
-
-    // Explosion
+    // Create two different smoke configurations
+    // For explosion
     Smoke::Configuration explosion_config;
     explosion_config.setDuration(1.0f, 0.2f);
     explosion_config.min_dist_ratio = 0.4f;
     explosion_config.target_scale   = 1.0f;
     explosion_config.opacity_level  = 0.25f;
+    // For the stream
+    Smoke::Configuration stream_config;
+    stream_config.setDuration(4.0f, 0.0f);
+    stream_config.min_dist_ratio = 0.5f;
+    stream_config.target_scale = 1.0f;
+    stream_config.opacity_level = 0.1f;
+    stream_config.dissipation_vector = { 0.0f, -100.0f };
+    // Create the events
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
         const uint32_t smokes_count = 40;
         for (uint32_t i(smokes_count); i--;) {
             const float direction_angle = RNGf::getUnder(2.0f * Math::PI);
             smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(direction_angle), sin(direction_angle)}, 300.0f, explosion_config);
         }
-    });
-    // Smoke on click
-    Smoke::Configuration stream_config;
-    stream_config.setDuration(4.0f, 0.0f);
-    stream_config.min_dist_ratio = 0.5f;
-    stream_config.target_scale = 1.0f;
-    stream_config.opacity_level = 0.2f;
-    stream_config.dissipation_vector = { 0.0f, -100.0f };
+    });    
     bool smoke_activated = false;
     app.getEventManager().addMousePressedCallback(sf::Mouse::Left, [&](sfev::CstEv) {
         smoke_activated = true;
