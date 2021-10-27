@@ -16,14 +16,14 @@ int32_t main()
     Smoke::Configuration explosion_config;
     explosion_config.setDuration(1.0f, 0.2f);
     explosion_config.min_dist_ratio = 0.4f;
-    explosion_config.target_scale   = 1.0f;
+    explosion_config.target_scale   = 0.9f;
     explosion_config.opacity_level  = 0.25f;
     // For the stream
     Smoke::Configuration stream_config;
     stream_config.setDuration(4.0f, 0.0f);
     stream_config.min_dist_ratio = 0.5f;
     stream_config.target_scale = 1.0f;
-    stream_config.opacity_level = 0.1f;
+    stream_config.opacity_level = 0.12f;
     stream_config.dissipation_vector = { 0.0f, -100.0f };
     // Create the events
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
@@ -45,12 +45,16 @@ int32_t main()
 
 	while (app.run()) {
         // Create smoke if activated
+        sf::RectangleShape stream_vector;
         if (smoke_activated) {
             const sf::Vector2f mouse_posiiton = app.getWorldMousePosition();
             const Vec2 mid_screen{ window_width * 0.5f, window_height * 0.5f };
             const Vec2 mid_to_mouse = Vec2{ mouse_posiiton.x, mouse_posiiton.y } - mid_screen;
             const float direction_angle = MathVec2::angle(mid_to_mouse) + RNGf::getRange(Math::PI * 0.1f);
             smoke_system.create({ window_width * 0.5f, window_height * 0.5f }, {cos(direction_angle), sin(direction_angle)}, 800.0f, stream_config);
+            
+
+            stream_vector.setOrigin
         }
         // Update smoke
         smoke_system.update(dt);
