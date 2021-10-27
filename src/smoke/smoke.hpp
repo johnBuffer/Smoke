@@ -25,23 +25,23 @@ struct Smoke
     float duration     = 0.0f;
     float current_time = 0.0f;
     float ratio        = 0.0f;
-    float scale        = 0.2f;
+    float scale        = 0.1f;
     float target_scale = 0.5f;
     sf::Sprite sprite;
 
     Smoke() = default;
 
-    Smoke(Vec2 pos, Vec2 dir, float dist, float lifetime)
+    Smoke(Vec2 pos, Vec2 dir, float max_dist, float lifetime)
         : position(pos)
         , direction(dir)
-        , target_dist(dist)
+        , target_dist(RNGf::getUnder(max_dist))
         , angle(RNGf::getUnder(2.0f * Math::PI))
         , target_angle(RNGf::getFullRange(1.5f))
-        , target_scale(RNGf::getUnder(1.0f))
-        , duration(1.25f * lifetime)
-        , current_time(0.25f * lifetime)
+        , duration(1.2f * lifetime)
+        , current_time(0.2f * lifetime)
         , sprite(texture)
     {
+        target_scale = 0.2f + 1.0f * target_dist / max_dist;
         const sf::Vector2u texture_size = texture.getSize();
         sprite.setOrigin(to<float>(texture_size.x / 2), to<float>(texture_size.y / 2));
     }
@@ -69,7 +69,7 @@ struct Smoke
         sprite.setPosition({ current_pos.x, current_pos.y});
         sprite.setScale(current_scale, current_scale);
         sprite.setRotation(Math::radToDeg(current_angle));
-        sprite.setColor(sf::Color(200, 200, 200, to<uint8_t>(220 * (1.0f - ratio))));
+        sprite.setColor(sf::Color(200, 200, 200, to<uint8_t>(100 * (1.0f - ratio))));
         context.draw(sprite);
     }
 };

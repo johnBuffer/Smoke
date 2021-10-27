@@ -13,11 +13,11 @@ int32_t main()
     SmokeSystem smoke_system;
 
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
-        const uint32_t smokes_count = 32;
+        const uint32_t smokes_count = 40;
         for (uint32_t i(smokes_count); i--;) {
             const float angle = RNGf::getUnder(2.0f * Math::PI);
             const float dist = RNGf::getUnder(300.0f);
-            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(angle), sin(angle)}, dist, 1.0f);
+            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(angle), sin(angle)}, 300.0f, 1.0f);
         }
     });
 
