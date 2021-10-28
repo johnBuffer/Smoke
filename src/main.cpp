@@ -1,7 +1,9 @@
 #include "engine/window_context_handler.hpp"
 #include "smoke/smoke_system.hpp"
 #include "gui/vector_direction.hpp"
+#include "gui/graph.hpp"
 #include "engine/common/transition.hpp"
+#include <iostream>
 
 
 int32_t main()
@@ -17,7 +19,7 @@ int32_t main()
     // Create two different smoke configurations
     // For explosion
     Smoke::Configuration explosion_config;
-    explosion_config.setDuration(1.0f, 0.2f);
+    explosion_config.setDuration(1.0f, 0.0f);
     explosion_config.min_dist_ratio = 0.25f;
     explosion_config.target_scale   = 0.9f;
     explosion_config.opacity_level  = 0.25f;
@@ -34,6 +36,13 @@ int32_t main()
     const float length        = radius * 1.5f;
     const float rest_length   = 0.1f;
     trn::Transition<float> dir_length(rest_length, 3.0f);
+    // Demo
+    Smoke::Configuration demo_config;
+    demo_config.setDuration(4.0f, 0.0f);
+    demo_config.min_dist_ratio     = 1.0f;
+    demo_config.target_scale       = 1.0f;
+    demo_config.opacity_level      = 0.12f;
+    demo_config.dissipation_vector = { 0.0f, 0.0f };
     // Create the events
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
         const uint32_t smokes_count = 50;
@@ -54,35 +63,49 @@ int32_t main()
 
     const float dt = 1.0f / 60.0f;
 
+    smoke_system.create({ window_width * 0.1f, window_height * 0.5f }, { 1.0f, 0.0f }, window_width * 0.8f, demo_config);
+
+    sf::Clock clock;
+    sf::Clock clock_graph;
+
+    Graphic graph(60 * 4, { 1920.0f * 0.8f, 400.0f }, { 1920.0f * 0.1f, 500.0f });
+    graph.color = sf::Color::Green;
+    graph.max_value = window_width * 0.9f;
+
 	while (app.run()) {
         VectorDirection dir_o(radius, dir_length);
         VectorDirection dir_i(radius - outline_width, dir_length - outline_width);
         dir_o.position = mid_screen;
         dir_i.position = mid_screen;
-        dir_i.color = sf::Color(255, 150, 0.0f);
-
+        dir_i.color = sf::Color(255, 100, 0.0f);
         // Compute mid screen to mouse vector
         const sf::Vector2f mouse_position = app.getWorldMousePosition();
         const Vec2 mid_to_mouse = { mouse_position.x - mid_screen.x, mouse_position.y - mid_screen.y };
         const float mid_to_mouse_angle = MathVec2::angle(mid_to_mouse);
         dir_o.setAngle(mid_to_mouse_angle);
         dir_i.setAngle(mid_to_mouse_angle);
-
         // Create smoke if activated
         sf::RectangleShape stream_vector;
         if (smoke_activated) {
             const float direction_angle = mid_to_mouse_angle + RNGf::getRange(Math::PI * 0.1f);
-            smoke_system.create({ window_width * 0.5f, window_height * 0.5f }, {cos(direction_angle), sin(direction_angle)}, 850.0f, stream_config);
-        }        
-
+            smoke_system.create({ window_width * 0.5f, window_height * 0.5f }, { cos(direction_angle), sin(direction_angle) }, 850.0f, stream_config);
+        }
         // Update smoke
-        smoke_system.update(dt);
+        const float freeze = 3.0f;
+        if (clock.getElapsedTime().asSeconds() > freeze) {
+            smoke_system.update(dt);
+            if (clock_graph.getElapsedTime().asMilliseconds() > 4.0f && !smoke_system.particles[0].done()) {
+                graph.addValue(smoke_system.particles[0].getPosition().x);
+                clock_graph.restart();
+            }
+        }
         // Render the scene
         RenderContext& context = app.getRenderContext();
         context.clear();
         smoke_system.render(context);
-        context.draw(dir_o);
-        context.draw(dir_i);
+        /*context.draw(dir_o);
+        context.draw(dir_i);*/
+        graph.render(context);
         context.display();
 	}
 

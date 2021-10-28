@@ -78,9 +78,11 @@ struct Smoke
 
     void update(float dt)
     {
-        // Update time
-        current_time   += dt;
-        ratio           = current_time / configuration.duration;
+        if (!done()) {
+            // Update time
+            current_time += dt;
+            ratio = current_time / configuration.duration;
+        }
     }
 
     bool done() const
@@ -88,12 +90,18 @@ struct Smoke
         return ratio > 1.0f;
     }
 
+    Vec2 getPosition() const
+    {
+        const float t_dist = Smooth::smoothStop(ratio, 5);
+        return position + direction * (target_dist * t_dist) + configuration.dissipation_vector * (current_time - configuration.skip_duration_offset);
+    }
+
     void render(RenderContext& context)
     {
         const float t_scale       = Smooth::smoothStop(ratio, 10);
         const float t_dist        = Smooth::smoothStop(ratio, 5);
         const float t_angle       = Smooth::smoothStop(ratio, 1);
-        const float current_scale = 0.1f; // configuration.getCurrentScale(t_scale);
+        const float current_scale = 0.2f; // configuration.getCurrentScale(t_scale);
         const float current_angle = 0.0f; // angle + (target_angle * t_angle);
         const Vec2  current_pos   = position + direction * (target_dist * t_dist) + configuration.dissipation_vector * (current_time - configuration.skip_duration_offset);
         sprite.setPosition({ current_pos.x, current_pos.y});
@@ -101,7 +109,7 @@ struct Smoke
         sprite.setRotation(Math::radToDeg(current_angle));
         //sprite.setColor(sf::Color(200, 200, 200, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
         //sprite.setFillColor(sf::Color(200, 200, 200, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
-        sprite.setFillColor(sf::Color(200, 200, 200, 255));
+        sprite.setFillColor(sf::Color::White);
         context.draw(sprite);
     }
 };
