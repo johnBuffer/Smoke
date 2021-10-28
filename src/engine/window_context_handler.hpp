@@ -84,7 +84,7 @@ public:
                          sf::Vector2u window_size,
                          int32_t window_style = sf::Style::Default,
                          bool use_viewport_callbacks = true)
-        : m_window(sf::VideoMode(window_size.x, window_size.y), window_name, window_style)
+        : m_window(createWindow(window_name, window_size, window_style, 4))
         , m_event_manager(m_window, true)
         , m_render_context(m_window)
     {
@@ -139,7 +139,14 @@ public:
     }
     
 private:
-    sf::RenderWindow m_window;
+    sf::RenderWindow   m_window;
     sfev::EventManager m_event_manager;
-    RenderContext m_render_context;
+    RenderContext      m_render_context;
+
+    static sf::RenderWindow createWindow(const std::string& window_name, sf::Vector2u window_size, uint32_t window_style, int32_t aa_level)
+    {
+        sf::ContextSettings settings;
+        settings.antialiasingLevel = aa_level;
+        return {sf::VideoMode(window_size.x, window_size.y), window_name, window_style, settings};
+    }
 };

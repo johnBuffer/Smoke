@@ -77,6 +77,12 @@ struct MathVec2
     }
 
     template<typename Vec2Type>
+    static Vec2Type rotateDir(const Vec2Type& v, const Vec2Type& dir)
+    {
+        return { dir.x * v.x - dir.y * v.y, dir.y * v.x + dir.x * v.y };
+    }
+
+    template<typename Vec2Type>
     static Vec2Type normalize(const Vec2Type& v)
     {
         return v / length(v);
