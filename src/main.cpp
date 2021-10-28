@@ -19,23 +19,29 @@ int32_t main()
     // Create two different smoke configurations
     // For explosion
     Smoke::Configuration explosion_config;
-    explosion_config.setDuration(1.0f, 0.0f);
-    explosion_config.min_dist_ratio = 0.25f;
-    explosion_config.target_scale   = 0.9f;
-    explosion_config.opacity_level  = 0.25f;
+    explosion_config.setDuration(1.0f, 0.1f);
+    explosion_config.min_dist_ratio = 0.0f;
+    explosion_config.target_scale   = 0.7f;
+    explosion_config.opacity_level  = 0.125f;
+    Smoke::Configuration explosion_config_2;
+    explosion_config_2.setDuration(1.0f, 0.1f);
+    explosion_config_2.min_dist_ratio = 0.7f;
+    explosion_config_2.target_scale = 1.2f;
+    explosion_config_2.opacity_level = 0.125f;
     // For the stream
     Smoke::Configuration stream_config;
-    stream_config.setDuration(4.0f, 0.0f);
+    stream_config.setDuration(6.0f, 0.0f);
     stream_config.min_dist_ratio     = 0.5f;
-    stream_config.target_scale       = 1.0f;
+    stream_config.target_scale       = 1.5f;
     stream_config.opacity_level      = 0.12f;
-    stream_config.dissipation_vector = { 0.0f, -100.0f };
+    stream_config.dissipation_vector = { 0.0f, -50.0f };
     // Gui parameters
     const float outline_width = 5.0f;
     const float radius        = 15.0f;
     const float length        = radius * 1.5f;
     const float rest_length   = 0.1f;
-    trn::Transition<float> dir_length(rest_length, 3.0f);
+    trn::Transition<float> dir_radius(radius, 3.0f);
+    trn::Transition<float> dir_length(length, 3.0f);
     // Demo
     Smoke::Configuration demo_config;
     demo_config.setDuration(4.0f, 0.0f);
@@ -45,10 +51,14 @@ int32_t main()
     demo_config.dissipation_vector = { 0.0f, 0.0f };
     // Create the events
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
-        const uint32_t smokes_count = 50;
+        const uint32_t smokes_count = 32;
         for (uint32_t i(smokes_count); i--;) {
-            const float direction_angle = RNGf::getUnder(2.0f * Math::PI);
-            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(direction_angle), sin(direction_angle)}, 300.0f, explosion_config);
+            const float direction_angle = -RNGf::getUnder(0.05f * Math::PI);
+            smoke_system.create(Vec2{ window_width * 0.5f, window_height * 0.5f }, Vec2{ cos(direction_angle), sin(direction_angle) }, 400.0f, explosion_config);
+            const float direction_angle_2 = -RNGf::getUnder(0.1f * Math::PI);
+            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(direction_angle), sin(direction_angle)}, 400.0f, explosion_config_2);
+            dir_radius.setValueInstant(1.5f * radius);
+            dir_radius = radius;
         }
     });
     bool smoke_activated = false;
@@ -62,63 +72,70 @@ int32_t main()
     });
 
     const float dt = 1.0f / 60.0f;
-
-    smoke_system.create({ window_width * 0.1f, window_height * 0.25f }, { 1.0f, 0.0f }, window_width * 0.8f, demo_config);
-
     sf::Clock clock;
-    sf::Clock clock_graph;
 
-    Graphic graph(60 * 4 + 2, { 1920.0f * 0.8f, 400.0f }, { 1920.0f * 0.1f, window_height - 100.0f- 400.0f });
-    graph.color = sf::Color::Green;
-    graph.max_value = window_width * 0.8f;
-
-    const float delta = 10.0f;
-    Graphic graph_2(60 * 4 + 2, { 1920.0f * 0.8f, 400.0f - delta }, { 1920.0f * 0.1f + delta, window_height - 100.0f - 400.0f + delta });
-    graph_2.color = sf::Color::Black;
-    graph_2.max_value = window_width * 0.8f;
-
-    sf::RectangleShape vertical_axe({ 1920.0f * 0.8f, 20.0f });
-    vertical_axe.setPosition({1920.0f * 0.1f, window_height - 50.0f});
+    sf::Font font;
+    font.loadFromFile("res/font.ttf");
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(150);
+    text.setString("Thanks for Watching!");
+    text.setOrigin(text.getGlobalBounds().width * 0.5f, text.getGlobalBounds().height * 0.5f);
+    text.setPosition(mid_screen);
 
 	while (app.run()) {
-        VectorDirection dir_o(radius, dir_length);
-        VectorDirection dir_i(radius - outline_width, dir_length - outline_width);
-        dir_o.position = mid_screen;
-        dir_i.position = mid_screen;
-        dir_i.color = sf::Color(255, 100, 0.0f);
+        const sf::Vector2f dir_1_position{ 100.0f, 100.0f };
+        const sf::Vector2f dir_2_position{ 1820.0f, 980.0f};
+        const float dir_1_angle = Math::PI * 0.25f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
+        const float dir_2_angle = -Math::PI * 0.75f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
         // Compute mid screen to mouse vector
         const sf::Vector2f mouse_position = app.getWorldMousePosition();
         const Vec2 mid_to_mouse = { mouse_position.x - mid_screen.x, mouse_position.y - mid_screen.y };
         const float mid_to_mouse_angle = MathVec2::angle(mid_to_mouse);
-        dir_o.setAngle(mid_to_mouse_angle);
-        dir_i.setAngle(mid_to_mouse_angle);
         // Create smoke if activated
         sf::RectangleShape stream_vector;
-        if (smoke_activated) {
-            const float direction_angle = mid_to_mouse_angle + RNGf::getRange(Math::PI * 0.1f);
-            smoke_system.create({ window_width * 0.5f, window_height * 0.5f }, { cos(direction_angle), sin(direction_angle) }, 850.0f, stream_config);
+        if (1) {
+            const float t = 0.2f * clock.getElapsedTime().asSeconds();
+            float r = sin(t);
+            float g = sin(t + 0.33f * 2.0f * Math::PI);
+            float b = sin(t + 0.66f * 2.0f * Math::PI);
+
+            const float t2 = t + Math::PI * 0.5f;
+            float r2 = sin(t2);
+            float g2 = sin(t2 + 0.33f * 2.0f * Math::PI);
+            float b2 = sin(t2 + 0.66f * 2.0f * Math::PI);
+
+            sf::Color color = sf::Color(255 * r * r, 255 * g * g, 255 * b * b);
+            sf::Color color2 = sf::Color(255*r2*r2, 255*g2*g2, 255*b2*b2);
+            const float direction_angle = dir_1_angle + RNGf::getRange(Math::PI * 0.1f);
+            smoke_system.create({ dir_1_position.x, dir_1_position.y }, { cos(dir_1_angle), sin(dir_1_angle) }, 1200.0f, stream_config);
+            smoke_system.particles.back().color = color;
+            smoke_system.create({ dir_2_position.x, dir_2_position.y }, { cos(dir_2_angle), sin(dir_2_angle) }, 1200.0f, stream_config);
+            smoke_system.particles.back().color = color2;
         }
         // Update smoke
-        const float freeze = 3.0f;
-        if (clock.getElapsedTime().asSeconds() > freeze) {
-            if (clock_graph.getElapsedTime().asMilliseconds() > 4.0f && !smoke_system.particles[0].done()) {
-                graph.addValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
-                graph.setLastValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
-                graph_2.addValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
-                graph_2.setLastValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
-                clock_graph.restart();
-            }
-            smoke_system.update(dt);
-        }
+        smoke_system.update(dt);
         // Render the scene
         RenderContext& context = app.getRenderContext();
         context.clear();
+        context.draw(text);
         smoke_system.render(context);
-        /*context.draw(dir_o);
-        context.draw(dir_i);*/
-        graph.render(context);
-        graph_2.render(context);
-        context.draw(vertical_axe);
+        VectorDirection dir_o(dir_radius, dir_length);
+        VectorDirection dir_i(dir_radius - outline_width, dir_length - outline_width);
+        dir_o.position = dir_1_position;
+        dir_i.position = dir_1_position;
+        dir_o.color = sf::Color(200, 200, 200);
+        dir_i.color = sf::Color(255, 100, 0);
+        dir_o.setAngle(dir_1_angle);
+        dir_i.setAngle(dir_1_angle);
+        context.draw(dir_o);
+        context.draw(dir_i);
+        dir_o.position = dir_2_position;
+        dir_i.position = dir_2_position;
+        dir_o.setAngle(dir_2_angle);
+        dir_i.setAngle(dir_2_angle);
+        context.draw(dir_o);
+        context.draw(dir_i);
         context.display();
 	}
 

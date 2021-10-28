@@ -20,7 +20,7 @@ struct SmokeSystem
             smoke.update(dt);
         }
         // Remove old ones
-        //removeOldParticles();
+        removeOldParticles();
     }
 
     void removeOldParticles()
