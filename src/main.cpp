@@ -63,14 +63,22 @@ int32_t main()
 
     const float dt = 1.0f / 60.0f;
 
-    smoke_system.create({ window_width * 0.1f, window_height * 0.5f }, { 1.0f, 0.0f }, window_width * 0.8f, demo_config);
+    smoke_system.create({ window_width * 0.1f, window_height * 0.25f }, { 1.0f, 0.0f }, window_width * 0.8f, demo_config);
 
     sf::Clock clock;
     sf::Clock clock_graph;
 
-    Graphic graph(60 * 4, { 1920.0f * 0.8f, 400.0f }, { 1920.0f * 0.1f, 500.0f });
+    Graphic graph(60 * 4 + 2, { 1920.0f * 0.8f, 400.0f }, { 1920.0f * 0.1f, window_height - 100.0f- 400.0f });
     graph.color = sf::Color::Green;
-    graph.max_value = window_width * 0.9f;
+    graph.max_value = window_width * 0.8f;
+
+    const float delta = 10.0f;
+    Graphic graph_2(60 * 4 + 2, { 1920.0f * 0.8f, 400.0f - delta }, { 1920.0f * 0.1f + delta, window_height - 100.0f - 400.0f + delta });
+    graph_2.color = sf::Color::Black;
+    graph_2.max_value = window_width * 0.8f;
+
+    sf::RectangleShape vertical_axe({ 1920.0f * 0.8f, 20.0f });
+    vertical_axe.setPosition({1920.0f * 0.1f, window_height - 50.0f});
 
 	while (app.run()) {
         VectorDirection dir_o(radius, dir_length);
@@ -93,11 +101,14 @@ int32_t main()
         // Update smoke
         const float freeze = 3.0f;
         if (clock.getElapsedTime().asSeconds() > freeze) {
-            smoke_system.update(dt);
             if (clock_graph.getElapsedTime().asMilliseconds() > 4.0f && !smoke_system.particles[0].done()) {
-                graph.addValue(smoke_system.particles[0].getPosition().x);
+                graph.addValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
+                graph.setLastValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
+                graph_2.addValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
+                graph_2.setLastValue(smoke_system.particles[0].getPosition().x - 1920.0f * 0.1f);
                 clock_graph.restart();
             }
+            smoke_system.update(dt);
         }
         // Render the scene
         RenderContext& context = app.getRenderContext();
@@ -106,6 +117,8 @@ int32_t main()
         /*context.draw(dir_o);
         context.draw(dir_i);*/
         graph.render(context);
+        graph_2.render(context);
+        context.draw(vertical_axe);
         context.display();
 	}
 
