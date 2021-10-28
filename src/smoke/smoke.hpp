@@ -57,7 +57,7 @@ struct Smoke
     float         ratio        = 0.0f;
     float         target_scale = 0.5f;
     Configuration configuration;
-    sf::Sprite    sprite;
+    sf::RectangleShape    sprite;
 
     Smoke() = default;
 
@@ -65,14 +65,14 @@ struct Smoke
         : position(pos)
         , direction(dir)
         , target_dist(config.getTargetDist(max_dist))
-        , angle(RNGf::getUnder(2.0f * Math::PI))
-        , target_angle(RNGf::getFullRange(1.5f))
+        , angle(0.0f * RNGf::getUnder(2.0f * Math::PI))
+        , target_angle(0.0f * RNGf::getFullRange(1.5f))
         , current_time(config.skip_duration_offset)
-        , sprite(texture)
         , configuration(config)
     {
         target_scale = 0.2f + 1.0f * target_dist / max_dist;
         const sf::Vector2u texture_size = texture.getSize();
+        sprite.setSize({to<float>(texture_size.x), to<float>(texture_size.y)});
         sprite.setOrigin(to<float>(texture_size.x) * 0.5f, to<float>(texture_size.y) * 0.5f);
     }
 
@@ -90,16 +90,18 @@ struct Smoke
 
     void render(RenderContext& context)
     {
-        const float t_scale = Smooth::smoothStop(ratio, 10);
-        const float t_dist  = Smooth::smoothStop(ratio, 5);
-        const float t_angle = Smooth::smoothStop(ratio, 1);
-        const float current_scale = configuration.getCurrentScale(t_scale);
-        const float current_angle = angle + (target_angle * t_angle);
+        const float t_scale       = Smooth::smoothStop(ratio, 10);
+        const float t_dist        = Smooth::smoothStop(ratio, 5);
+        const float t_angle       = Smooth::smoothStop(ratio, 1);
+        const float current_scale = 0.1f; // configuration.getCurrentScale(t_scale);
+        const float current_angle = 0.0f; // angle + (target_angle * t_angle);
         const Vec2  current_pos   = position + direction * (target_dist * t_dist) + configuration.dissipation_vector * (current_time - configuration.skip_duration_offset);
         sprite.setPosition({ current_pos.x, current_pos.y});
         sprite.setScale(current_scale, current_scale);
         sprite.setRotation(Math::radToDeg(current_angle));
-        sprite.setColor(sf::Color(200, 200, 200, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
+        //sprite.setColor(sf::Color(200, 200, 200, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
+        //sprite.setFillColor(sf::Color(200, 200, 200, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
+        sprite.setFillColor(sf::Color(200, 200, 200, 255));
         context.draw(sprite);
     }
 };

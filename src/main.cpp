@@ -30,9 +30,9 @@ int32_t main()
     stream_config.dissipation_vector = { 0.0f, -100.0f };
     // Gui parameters
     const float outline_width = 5.0f;
-    const float radius = 15.0f;
-    const float length = radius * 1.5f;
-    const float rest_length = 0.1f;
+    const float radius        = 15.0f;
+    const float length        = radius * 1.5f;
+    const float rest_length   = 0.1f;
     trn::Transition<float> dir_length(rest_length, 3.0f);
     // Create the events
     app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
