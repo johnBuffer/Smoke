@@ -19,6 +19,7 @@ struct Smoke
         float min_dist_ratio       = 0.0f;
         float ratio_skip           = 0.0f;
         float opacity_level        = 1.0f;
+        float scale_variation      = 0.2f;
         Vec2  dissipation_vector   = {};
 
         void setDuration(float lifetime, float skip = 0.0f)
@@ -59,6 +60,7 @@ struct Smoke
     sf::Color     color        = sf::Color::White;
     Configuration configuration;
     sf::Sprite    sprite;
+    float         scale_on_scale;
 
     Smoke() = default;
 
@@ -71,6 +73,7 @@ struct Smoke
         , current_time(config.skip_duration_offset)
         , configuration(config)
         , sprite(texture)
+        , scale_on_scale(RNGf::getRange(1.0f - config.scale_variation, 1.0f))
     {
         target_scale = 0.2f + 1.0f * target_dist / max_dist;
         const sf::Vector2u texture_size = texture.getSize();
@@ -102,7 +105,7 @@ struct Smoke
         const float t_scale       = Smooth::smoothStop(ratio, 5);
         const float t_dist        = Smooth::smoothStop(ratio, 5);
         const float t_angle       = Smooth::smoothStop(ratio, 1);
-        const float current_scale = configuration.getCurrentScale(t_scale);
+        const float current_scale = configuration.getCurrentScale(t_scale) * scale_on_scale;
         const float current_angle = angle + (target_angle * t_angle);
         const Vec2  current_pos   = position + direction * (target_dist * t_dist) + configuration.dissipation_vector * (current_time - configuration.skip_duration_offset);
         sprite.setPosition({ current_pos.x, current_pos.y});
