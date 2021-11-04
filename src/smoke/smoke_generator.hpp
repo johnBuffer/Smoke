@@ -7,33 +7,62 @@
 
 struct SmokeGenerator
 {
-    VectorDirection        outer;
-    VectorDirection        inner;
     trn::Transition<float> radius;
     trn::Transition<float> length;
-    float                  radius_delta;
-    float                  length_delta;
+    float                  outline = 3.0f;
+    VectorDirection        outer;
+    VectorDirection        inner;
     Smoke::Configuration   configuration;
+    sf::Color              color;
+    bool                   enabled = false;
 
-    SmokeGenerator()
+    SmokeGenerator() = default;
+
+    SmokeGenerator(sf::Vector2f position, float radius_, float length_)
+        : radius(radius_)
+        , length(length_)
+        , outer(0.0f, 0.0f)
+        , inner(0.0f, 0.0f)
     {
-        configuration.setDuration(12.0f, 0.0f);
+        configuration.setDuration(20.0f, 0.0f);
         configuration.min_dist_ratio     = 0.5f;
-        configuration.target_scale       = 2.5f;
-        configuration.opacity_level      = 0.1f;
-        configuration.dissipation_vector = { 0.0f, -100.0f };
-        configuration.scale_variation    = 0.8f;
+        configuration.target_scale       = 1.0f;
+        configuration.opacity_level      = 0.15f;
+        //configuration.dissipation_vector = { 0.0f, -100.0f };
+        configuration.scale_variation    = 0.5f;
+
+        setPosition(position);
     }
 
     void update(float dt, SmokeSystem& smoke_system)
     {
-        outer.radius = radius;
-        inner.radius = radius - radius_delta;
-        outer.length = length;
-        inner.length = length - length_delta;
+        setLength(length);
+        setRadius(radius);
 
-        const float direction_angle = MathVec2::angle(outer.direction) + RNGf::getRange(Math::PI * 0.1f);
-        smoke_system.create({ outer.position.x, outer.position.y }, { cos(direction_angle), sin(direction_angle) }, 250.0f, configuration);
+        if (enabled) {
+            const float direction_angle = MathVec2::angle(outer.direction) + RNGf::getRange(Math::PI * 0.05f);
+            configuration.dissipation_vector = {20.0f * outer.direction.x, 20.0f * outer.direction.y};
+            smoke_system.create({outer.position.x, outer.position.y}, {cos(direction_angle), sin(direction_angle)},
+                                650.0f, configuration, color);
+        }
+    }
+
+    void setRadius(float r)
+    {
+        outer.radius = r;
+        inner.radius = r - std::min(radius.get(), outline);
+    }
+
+    void setLength(float l)
+    {
+        outer.length = l;
+        inner.length = l - std::min(length.get(), outline);
+    }
+
+    void setDirection(sf::Vector2f direction)
+    {
+        outer.direction = direction;
+        inner.direction = direction;
     }
 
     void setPosition(sf::Vector2f position)
@@ -42,7 +71,23 @@ struct SmokeGenerator
         inner.position = position;
     }
 
-    void render(RenderContext& context)
+    void setColor(sf::Color c)
+    {
+        color = c;
+        inner.color = color;
+    }
+
+    void enable()
+    {
+        enabled = true;
+    }
+
+    void disable()
+    {
+        enabled = false;
+    }
+
+    void render(RenderContext& context) const
     {
         context.draw(outer);
         context.draw(inner);

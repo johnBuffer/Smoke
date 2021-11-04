@@ -56,7 +56,7 @@ struct Smoke
     float         target_angle = 0.0f;
     float         current_time = 0.0f;
     float         ratio        = 0.0f;
-    float         target_scale = 0.5f;
+    float         angle_rotation_base = RNGf::getRange(0.3f);
     sf::Color     color        = sf::Color::White;
     Configuration configuration;
     sf::Sprite    sprite;
@@ -76,7 +76,6 @@ struct Smoke
         , sprite(texture)
         , scale_on_scale(RNGf::getRange(1.0f - config.scale_variation, 1.0f))
     {
-        target_scale = 0.2f + 1.0f * target_dist / max_dist;
         const sf::Vector2u texture_size = texture.getSize();
         //sprite.setSize({ to<float>(texture_size.x), to<float>(texture_size.y) });
         sprite.setOrigin(to<float>(texture_size.x) * 0.5f, to<float>(texture_size.y) * 0.5f);
@@ -107,15 +106,13 @@ struct Smoke
         const float t_scale       = Smooth::smoothStop(ratio, 5);
         const float t_dist        = Smooth::smoothStop(ratio, 5);
         const float t_angle       = Smooth::smoothStop(ratio, 1);
-        const float current_scale = configuration.getCurrentScale(t_scale) *scale_on_scale;
-        const float current_angle = angle + (target_angle * t_angle);
+        const float current_scale = configuration.getCurrentScale(t_scale) * scale_on_scale;
+        const float current_angle = angle + (target_angle * t_angle) + angle_rotation_base * (current_time - configuration.skip_duration_offset);
         const Vec2  current_pos = position + direction * (target_dist * t_dist) + configuration.dissipation_vector * (current_time - configuration.skip_duration_offset);
         sprite.setPosition({ current_pos.x, current_pos.y});
         sprite.setScale(current_scale, current_scale);
         sprite.setRotation(Math::radToDeg(current_angle));
         sprite.setColor(sf::Color(color.r, color.g, color.b, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
-        //sprite.setFillColor(sf::Color(200, 200, 200, to<uint8_t>(255.0f * configuration.opacity_level * (1.0f - ratio))));
-        //sprite.setFillColor(sf::Color::White);
         context.draw(sprite);
     }
 };
