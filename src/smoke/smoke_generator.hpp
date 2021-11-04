@@ -24,13 +24,14 @@ struct SmokeGenerator
         , outer(0.0f, 0.0f)
         , inner(0.0f, 0.0f)
     {
-        configuration.setDuration(20.0f, 0.0f);
+        configuration.setDuration(8.0f, 0.0f);
         configuration.min_dist_ratio     = 0.5f;
-        configuration.target_scale       = 1.0f;
-        configuration.opacity_level      = 0.15f;
-        //configuration.dissipation_vector = { 0.0f, -100.0f };
+        configuration.target_scale       = 1.8f;
+        configuration.opacity_level      = 0.1f;
+        configuration.dissipation_vector = { 0.0f, -30.0f };
         configuration.scale_variation    = 0.5f;
 
+        outer.color = sf::Color::White;
         setPosition(position);
     }
 
@@ -41,9 +42,8 @@ struct SmokeGenerator
 
         if (enabled) {
             const float direction_angle = MathVec2::angle(outer.direction) + RNGf::getRange(Math::PI * 0.05f);
-            configuration.dissipation_vector = {20.0f * outer.direction.x, 20.0f * outer.direction.y};
             smoke_system.create({outer.position.x, outer.position.y}, {cos(direction_angle), sin(direction_angle)},
-                                650.0f, configuration, color);
+                                1200.0f, configuration, color);
         }
     }
 

@@ -11,7 +11,7 @@ struct Rocket
 	Smoke::Configuration configuration;
 	float speed;
 	float angle;
-	float duration = 0.02f;
+    float duration  = RNGf::getRange(1.5f, 3.0f);
 	float deviation = RNGf::getRange(0.5f);
 	float current_time = 0.0f;
 
@@ -20,7 +20,7 @@ struct Rocket
 		, speed(speed_)
 		, angle(angle_)
 	{
-		configuration.setDuration(4.0f, 0.0f);
+		configuration.setDuration(2.0f, 0.0f);
 		configuration.min_dist_ratio = 0.1f;
 		configuration.opacity_level = 0.05f;
 		configuration.target_scale = 0.35f;
@@ -35,8 +35,20 @@ struct Rocket
 
 	void update(float dt, SmokeSystem& smoke_system)
 	{
-		current_time += dt;
-		
+        current_time += dt;
+        angle += deviation * dt;
+        direction = { cos(angle), sin(angle) };
+        position += direction * (speed * dt);
+        const float dist = 100.0f;
+        {
+            const float smoke_angle = angle + Math::PI + RNGf::getRange(Math::PI * 0.05f);
+            smoke_system.create({ position.x, position.y }, { cos(smoke_angle), sin(smoke_angle) }, dist, configuration);
+        }
+        {
+            const float smoke_angle = angle + Math::PI + RNGf::getRange(Math::PI * 0.25f);
+            smoke_system.create({ position.x, position.y }, { cos(smoke_angle), sin(smoke_angle) }, dist, configuration);
+        }
+
 		if (isDone()) {
 			SoundManager::playInstanceOf(0);
 
