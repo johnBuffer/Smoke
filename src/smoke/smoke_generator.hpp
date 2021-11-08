@@ -26,13 +26,18 @@ struct SmokeGenerator
     {
         configuration.setDuration(8.0f, 0.0f);
         configuration.min_dist_ratio     = 0.5f;
-        configuration.target_scale       = 1.8f;
+        configuration.target_scale       = 1.5f;
         configuration.opacity_level      = 0.1f;
         configuration.dissipation_vector = { 0.0f, -30.0f };
         configuration.scale_variation    = 0.5f;
 
         outer.color = sf::Color::White;
         setPosition(position);
+    }
+
+    void setConfiguration(const Smoke::Configuration& new_conf)
+    {
+        configuration = new_conf;
     }
 
     void update(float dt, SmokeSystem& smoke_system)

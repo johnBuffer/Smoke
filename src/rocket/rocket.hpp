@@ -2,6 +2,7 @@
 
 #include "smoke/smoke_system.hpp"
 #include "engine/sound/sound_manager.hpp"
+#include "gui/color_utils.hpp"
 
 
 struct Rocket
@@ -11,7 +12,7 @@ struct Rocket
 	Smoke::Configuration configuration;
 	float speed;
 	float angle;
-    float duration  = RNGf::getRange(1.5f, 3.0f);
+    float duration  = 0.0f;
 	float deviation = RNGf::getRange(0.5f);
 	float current_time = 0.0f;
 
@@ -35,27 +36,8 @@ struct Rocket
 
 	void update(float dt, SmokeSystem& smoke_system)
 	{
-        current_time += dt;
-        angle += deviation * dt;
-        direction = { cos(angle), sin(angle) };
-        position += direction * (speed * dt);
-        const float dist = 100.0f;
-        {
-            const float smoke_angle = angle + Math::PI + RNGf::getRange(Math::PI * 0.05f);
-            smoke_system.create({ position.x, position.y }, { cos(smoke_angle), sin(smoke_angle) }, dist, configuration);
-        }
-        {
-            const float smoke_angle = angle + Math::PI + RNGf::getRange(Math::PI * 0.25f);
-            smoke_system.create({ position.x, position.y }, { cos(smoke_angle), sin(smoke_angle) }, dist, configuration);
-        }
-
 		if (isDone()) {
-			SoundManager::playInstanceOf(0);
-
-			const float t = RNGf::getUnder(Math::PI);
-			float r = sin(t);
-			float g = sin(t + 0.33f * 2.0f * Math::PI);
-			float b = sin(t + 0.66f * 2.0f * Math::PI);
+			const sf::Color color = ColorUtils::getRainbow(RNGf::getUnder(2.0f * Math::PI));
 
 			{
 				Smoke::Configuration explosion_small_config;
@@ -70,7 +52,7 @@ struct Rocket
 					const float direction_angle = -RNGf::getUnder(2.0f * Math::PI);
 					Vec2 dir = { cos(direction_angle), sin(direction_angle) };
 					smoke_system.create({ position.x, position.y }, dir, 400.0f, explosion_small_config);
-					smoke_system.particles.back().color = sf::Color(255 * r * r, 255 * g * g, 255 * b * b);
+					smoke_system.particles.back().color = color;
 				}
 			}
 
@@ -88,7 +70,7 @@ struct Rocket
 				Vec2 dir = { cos(direction_angle), sin(direction_angle) };
 				explosion_config.dissipation_vector = -dir * 20.0f;
 				smoke_system.create({ position.x, position.y }, dir, 250.0f, explosion_config);
-				smoke_system.particles.back().color = sf::Color(255 * r * r, 255 * g * g, 255 * b * b);
+				smoke_system.particles.back().color = color;
 			}
 
 			{
@@ -105,10 +87,9 @@ struct Rocket
 					Vec2 dir = { cos(direction_angle), sin(direction_angle) };
 					explosion_small_config.dissipation_vector = dir * 20.0f;
 					smoke_system.create({ position.x, position.y }, { cos(direction_angle), sin(direction_angle) }, 180.0f, explosion_small_config);
-					smoke_system.particles.back().color = sf::Color(255 * r * r, 255 * g * g, 255 * b * b);
+					smoke_system.particles.back().color = color;
 				}
 			}
 		}
-
 	}
 };
