@@ -1,7 +1,9 @@
 #include "engine/window_context_handler.hpp"
-#include "smoke/smoke_system.hpp"
+#include "smoke/smoke_generator.hpp"
 #include "gui/vector_direction.hpp"
 #include "engine/common/transition.hpp"
+#include "rocket/rocket.hpp"
+#include <list>
 
 
 int32_t main()
@@ -10,79 +12,82 @@ int32_t main()
 	const int32_t window_width = 1920;
 	const int32_t window_height = 1080;
     const sf::Vector2f mid_screen{ window_width * 0.5f, window_height * 0.5f };
-	WindowContextHandler app("VPE", {window_width, window_height}, sf::Style::Fullscreen, true);
+	WindowContextHandler app("Smoke", {window_width, window_height}, sf::Style::Fullscreen, true);
     // Load resources
     Smoke::init();
     SmokeSystem smoke_system;
-    // Create two different smoke configurations
-    // For explosion
-    Smoke::Configuration explosion_config;
-    explosion_config.setDuration(1.0f, 0.2f);
-    explosion_config.min_dist_ratio = 0.25f;
-    explosion_config.target_scale   = 0.9f;
-    explosion_config.opacity_level  = 0.25f;
+    // Create two different smoke configurations    
     // For the stream
     Smoke::Configuration stream_config;
-    stream_config.setDuration(4.0f, 0.0f);
+    stream_config.setDuration(12.0f, 0.0f);
     stream_config.min_dist_ratio     = 0.5f;
-    stream_config.target_scale       = 1.0f;
-    stream_config.opacity_level      = 0.12f;
-    stream_config.dissipation_vector = { 0.0f, -100.0f };
-    // Gui parameters
-    const float outline_width = 5.0f;
-    const float radius = 15.0f;
-    const float length = radius * 1.5f;
-    const float rest_length = 0.1f;
-    trn::Transition<float> dir_length(rest_length, 3.0f);
+    stream_config.target_scale       = 1.5f;
+    stream_config.opacity_level      = 0.1f;
+    stream_config.dissipation_vector = { 0.0f, -30.0f };
+    stream_config.scale_variation    = 0.8f;
     // Create the events
-    app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv){
-        const uint32_t smokes_count = 50;
-        for (uint32_t i(smokes_count); i--;) {
-            const float direction_angle = RNGf::getUnder(2.0f * Math::PI);
-            smoke_system.create(Vec2{window_width * 0.5f, window_height * 0.5f}, Vec2{cos(direction_angle), sin(direction_angle)}, 300.0f, explosion_config);
-        }
-    });
     bool smoke_activated = false;
+    std::list<Rocket> rockets;
+
     app.getEventManager().addMousePressedCallback(sf::Mouse::Left, [&](sfev::CstEv) {
-        smoke_activated = true;
-        dir_length = length;
-    });
-    app.getEventManager().addMouseReleasedCallback(sf::Mouse::Left, [&](sfev::CstEv) {
-        smoke_activated = false;
-        dir_length = rest_length;
+        rockets.emplace_back(app.getWorldMousePosition(), 0.0f, 0.0f);
     });
 
     const float dt = 1.0f / 60.0f;
+    sf::Clock clock;
+
+    const sf::Vector2f dir_1_position{ 100.0f, 100.0f };
+    const sf::Vector2f dir_2_position{ 1820.0f, 980.0f };
+    SmokeGenerator generator_1(dir_1_position, 0.0f, 0.0f);
+    SmokeGenerator generator_2(dir_2_position, 0.0f, 0.0f);
+    generator_1.setConfiguration(stream_config);
+    generator_2.setConfiguration(stream_config);
+
+    app.getEventManager().addKeyPressedCallback(sf::Keyboard::Space, [&](sfev::CstEv) {
+        smoke_activated = !smoke_activated;
+        if (smoke_activated) {
+            generator_1.radius = 10.0f;
+            generator_2.radius = 10.0f;
+            generator_1.length = 15.0f;
+            generator_2.length = 15.0f;
+            generator_1.enable();
+            generator_2.enable();
+        }
+        else {
+            generator_1.radius = 0.0f;
+            generator_2.radius = 0.0f;
+            generator_1.length = 0.0f;
+            generator_2.length = 0.0f;
+            generator_1.disable();
+            generator_2.disable();
+        }
+    });
 
 	while (app.run()) {
-        VectorDirection dir_o(radius, dir_length);
-        VectorDirection dir_i(radius - outline_width, dir_length - outline_width);
-        dir_o.position = mid_screen;
-        dir_i.position = mid_screen;
-        dir_i.color = sf::Color(255, 150, 0.0f);
-
-        // Compute mid screen to mouse vector
-        const sf::Vector2f mouse_position = app.getWorldMousePosition();
-        const Vec2 mid_to_mouse = { mouse_position.x - mid_screen.x, mouse_position.y - mid_screen.y };
-        const float mid_to_mouse_angle = MathVec2::angle(mid_to_mouse);
-        dir_o.setAngle(mid_to_mouse_angle);
-        dir_i.setAngle(mid_to_mouse_angle);
-
-        // Create smoke if activated
-        sf::RectangleShape stream_vector;
-        if (smoke_activated) {
-            const float direction_angle = mid_to_mouse_angle + RNGf::getRange(Math::PI * 0.1f);
-            smoke_system.create({ window_width * 0.5f, window_height * 0.5f }, {cos(direction_angle), sin(direction_angle)}, 850.0f, stream_config);
-        }        
-
+        // Update smoke generators
+        const float dir_1_angle =  Math::PI * 0.25f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
+        const float dir_2_angle = -Math::PI * 0.75f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
+        generator_1.update(dt, smoke_system);
+        generator_2.update(dt, smoke_system);
+        const float t_1 = 0.2f * clock.getElapsedTime().asSeconds();
+        const float t_2 = t_1 + Math::PI * 0.5f;
+        generator_1.setColor(ColorUtils::getRainbow(t_1));
+        generator_2.setColor(ColorUtils::getRainbow(t_2));
+        generator_1.setDirection({ cos(dir_1_angle), sin(dir_1_angle) });
+        generator_2.setDirection({ cos(dir_2_angle), sin(dir_2_angle) });
+        // Update rockets
+        for (Rocket& r : rockets) {
+            r.update(dt, smoke_system);
+        }
+        rockets.remove_if([](Rocket& r) {return r.isDone(); });
         // Update smoke
         smoke_system.update(dt);
         // Render the scene
         RenderContext& context = app.getRenderContext();
-        context.clear();
+        context.clear(sf::Color::Black);
         smoke_system.render(context);
-        context.draw(dir_o);
-        context.draw(dir_i);
+        generator_1.render(context);
+        generator_2.render(context);
         context.display();
 	}
 
