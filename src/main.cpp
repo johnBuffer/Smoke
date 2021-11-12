@@ -3,7 +3,6 @@
 #include "gui/vector_direction.hpp"
 #include "engine/common/transition.hpp"
 #include "rocket/rocket.hpp"
-#include <iostream>
 #include <list>
 
 
@@ -66,7 +65,7 @@ int32_t main()
 
 	while (app.run()) {
         // Update smoke generators
-        const float dir_1_angle = Math::PI * 0.25f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
+        const float dir_1_angle =  Math::PI * 0.25f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
         const float dir_2_angle = -Math::PI * 0.75f + Math::PI * 0.125f * sin(clock.getElapsedTime().asSeconds());
         generator_1.update(dt, smoke_system);
         generator_2.update(dt, smoke_system);

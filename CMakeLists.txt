@@ -20,7 +20,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 add_executable(${PROJECT_NAME} ${WIN32_GUI} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "src" "lib")
-set(SFML_LIBS sfml-system sfml-window sfml-graphics sfml-audio)
+set(SFML_LIBS sfml-system sfml-window sfml-graphics)
 target_link_libraries(${PROJECT_NAME} ${SFML_LIBS})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 if (UNIX)

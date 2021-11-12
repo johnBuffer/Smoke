@@ -1,7 +1,6 @@
 #pragma once
 
 #include "smoke/smoke_system.hpp"
-#include "engine/sound/sound_manager.hpp"
 #include "gui/color_utils.hpp"
 
 
